@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "metrics": {
+    "production_loc": 2447,
+    "production_files": 29,
+    "production_packages": 12,
+    "test_files": 17,
+    "production_functions": 154,
+    "decision_points": 370
+  },
+  "persistence": {
+    "module": "go.etcd.io/bbolt",
+    "entities": [
+      "OrganizationNode",
+      "Account",
+      "AuthorizationRequest",
+      "AuthorizationObject",
+      "AuditEvent"
+    ],
+    "reopen_test": "TestPersistenceSurvivesReopen"
+  },
+  "workflows": [
+    {
+      "steps": [
+        "select organization node",
+        "load accounts page",
+        "select and deduplicate objects",
+        "confirm summary"
+      ],
+      "test": "TestWorkflowAccept"
+    },
+    {
+      "steps": [
+        "validate confirmed request",
+        "dispatch selected objects",
+        "review result snapshot",
+        "publish authorization"
+      ],
+      "test": "TestWorkflowPublish"
+    },
+    {
+      "steps": [
+        "close embedded store",
+        "reopen database file",
+        "load persisted request",
+        "confirm independent result state"
+      ],
+      "test": "TestWorkflowReopen"
+    }
+  ]
+}
