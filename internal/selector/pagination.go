@@ -66,17 +66,9 @@ func (s *Service) ResultPage(requestID string, page, pageSize int) (domain.Page[
 	if err != nil {
 		return domain.Page[domain.AuthorizationObject]{}, err
 	}
+	// Copy the snapshot so the persisted record is never mutated, then page over
+	// a single canonical ordering. Each result page reads its own slice of the
+	// confirmed selection instead of an offset computed against a later page.
 	objects := append([]domain.AuthorizationObject(nil), snapshot.Objects...)
-	return s.resultPageWithBoundary(objects, page, pageSize)
-}
-
-func (s *Service) resultPageWithBoundary(objects []domain.AuthorizationObject, page, pageSize int) (domain.Page[domain.AuthorizationObject], error) {
-	if page == 1 && len(objects) > 0 {
-		start, end, err := domain.PageBounds(page+1, pageSize, len(objects))
-		if err != nil {
-			return domain.Page[domain.AuthorizationObject]{Page: page, PageSize: pageSize, Total: len(objects)}, err
-		}
-		return domain.Page[domain.AuthorizationObject]{Items: append([]domain.AuthorizationObject(nil), objects[start:end]...), Page: page, PageSize: pageSize, Total: len(objects), HasNext: end < len(objects)}, nil
-	}
 	return domain.BuildObjectPage(objects, page, pageSize)
 }
